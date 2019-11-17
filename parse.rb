@@ -31,7 +31,7 @@ def get(url)
   end
 end
 
-city_name = :new_westminster
+city_name = :coquitlam
 city = {
   burnaby: {
     url: 'https://www.healthspace.ca/Clients/FHA/FHA_Website.nsf/CCFL-Child-List-All?OpenView&RestrictToCategory=23B11DF8A3C9C1E63649D5E3AD0748DC&count=1000&start=1',
@@ -47,6 +47,11 @@ city = {
     url: 'https://www.healthspace.ca/Clients/FHA/FHA_Website.nsf/CCFL-Child-List-All?OpenView&RestrictToCategory=704BC2C5FE08E4962CC3CC7339D9E4CB&Count=1000&start=1',
     target_coordinates: [49.2027065, -122.9064104],
     target_name: 'westminster_pier_park',
+  },
+  coquitlam: {
+    url: 'https://www.healthspace.ca/Clients/FHA/FHA_Website.nsf/CCFL-Child-List-All?OpenView&Count=30&RestrictToCategory=1BA31309BB2C37BD77B117A0F94A5BBB&Count=1000&start=1',
+    target_coordinates: [49.2749239, -122.8006107],
+    target_name: 'coquitlam_central_station',
   },
 }[city_name]
 
