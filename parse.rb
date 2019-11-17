@@ -33,11 +33,13 @@ end
 
 city = {
   burnaby: {
+    name: 'burnaby',
     url: 'https://www.healthspace.ca/Clients/FHA/FHA_Website.nsf/CCFL-Child-List-All?OpenView&RestrictToCategory=23B11DF8A3C9C1E63649D5E3AD0748DC&count=1000&start=1',
     target_coordinates: [49.2276595, -123.0179715],
     target_name: 'central_park',
   },
   port_moody: {
+    name: 'port_moody',
     url: 'https://www.healthspace.ca/Clients/FHA/FHA_Website.nsf/CCFL-Child-List-All?OpenView&RestrictToCategory=0F12D12B4988A647E049A7DBB99B8D25&&count=1000&start=1',
     target_coordinates: [49.2779657, -122.8461655],
     target_name: 'moody_center_station',
@@ -87,7 +89,7 @@ puts "\nFINISHED"
 
 daycares = daycares.compact.sort_by { |daycare| daycare[:distance_to_target] }
 
-CSV.open('./childcares.csv', 'w') do |csv|
+CSV.open("./#{city[:name]}_childcares.csv", 'w') do |csv|
   csv << [
     'name',
     'phone',
