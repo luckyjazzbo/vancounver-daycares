@@ -31,20 +31,24 @@ def get(url)
   end
 end
 
+city_name = :new_westminster
 city = {
   burnaby: {
-    name: 'burnaby',
     url: 'https://www.healthspace.ca/Clients/FHA/FHA_Website.nsf/CCFL-Child-List-All?OpenView&RestrictToCategory=23B11DF8A3C9C1E63649D5E3AD0748DC&count=1000&start=1',
     target_coordinates: [49.2276595, -123.0179715],
     target_name: 'central_park',
   },
   port_moody: {
-    name: 'port_moody',
     url: 'https://www.healthspace.ca/Clients/FHA/FHA_Website.nsf/CCFL-Child-List-All?OpenView&RestrictToCategory=0F12D12B4988A647E049A7DBB99B8D25&&count=1000&start=1',
     target_coordinates: [49.2779657, -122.8461655],
     target_name: 'moody_center_station',
   },
-}[:port_moody]
+  new_westminster: {
+    url: 'https://www.healthspace.ca/Clients/FHA/FHA_Website.nsf/CCFL-Child-List-All?OpenView&RestrictToCategory=704BC2C5FE08E4962CC3CC7339D9E4CB&Count=1000&start=1',
+    target_coordinates: [49.2027065, -122.9064104],
+    target_name: 'westminster_pier_park',
+  },
+}[city_name]
 
 index_body = get city[:url]
 index_pattern = /<img src="\/Clients\/FHA\/FHA_Website\.nsf\/linksquare\.gif" alt=""><a href="([^"]+)">([^<]+)<\/A><\/td><td valign="top" NOWRAP>&nbsp;([^<]+)<\/td>/
@@ -70,6 +74,9 @@ daycares = daycares.map do |url, name, phone|
   sanitized_location = location.gsub(/,\s*.{3}\s*.{3}$/, '')
                                .gsub(/^.{1,10}\s*\-\s*/, '')
   encoded_location = Geocoder.search(sanitized_location)[0]
+  if encoded_location
+    distance_to_target = Geocoder::Calculations.distance_between(city[:target_coordinates], encoded_location.coordinates).round(2)
+  end
 
   print '.'
 
@@ -81,15 +88,15 @@ daycares = daycares.map do |url, name, phone|
     capacity: capacity,
     num_inspections: num_inspections,
     coordinates: encoded_location&.coordinates,
-    distance_to_target: Geocoder::Calculations.distance_between(city[:target_coordinates], encoded_location&.coordinates).round(2),
+    distance_to_target: distance_to_target,
   }
 end
 
 puts "\nFINISHED"
 
-daycares = daycares.compact.sort_by { |daycare| daycare[:distance_to_target] }
+daycares = daycares.compact.sort_by { |daycare| daycare[:distance_to_target] || -1 }
 
-CSV.open("./#{city[:name]}_childcares.csv", 'w') do |csv|
+CSV.open("./#{city_name}_childcares.csv", 'w') do |csv|
   csv << [
     'name',
     'phone',
