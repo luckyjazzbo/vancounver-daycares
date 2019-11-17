@@ -31,15 +31,26 @@ def get(url)
   end
 end
 
-index_body = get 'https://www.healthspace.ca/Clients/FHA/FHA_Website.nsf/CCFL-Child-List-All?OpenView&RestrictToCategory=23B11DF8A3C9C1E63649D5E3AD0748DC&count=1000&start=1'
+city = {
+  burnaby: {
+    url: 'https://www.healthspace.ca/Clients/FHA/FHA_Website.nsf/CCFL-Child-List-All?OpenView&RestrictToCategory=23B11DF8A3C9C1E63649D5E3AD0748DC&count=1000&start=1',
+    target_coordinates: [49.2276595, -123.0179715],
+    target_name: 'central_park',
+  },
+  port_moody: {
+    url: 'https://www.healthspace.ca/Clients/FHA/FHA_Website.nsf/CCFL-Child-List-All?OpenView&RestrictToCategory=0F12D12B4988A647E049A7DBB99B8D25&&count=1000&start=1',
+    target_coordinates: [49.2779657, -122.8461655],
+    target_name: 'moody_center_station',
+  },
+}[:port_moody]
+
+index_body = get city[:url]
 index_pattern = /<img src="\/Clients\/FHA\/FHA_Website\.nsf\/linksquare\.gif" alt=""><a href="([^"]+)">([^<]+)<\/A><\/td><td valign="top" NOWRAP>&nbsp;([^<]+)<\/td>/
 daycares = index_body.scan index_pattern
 
 location_pattern = /<B>Facility Location:<\/B><BR>([^<]+)<\/P>/
 type_pattern = /<tr><td><b>Facility Information:<\/b><\/td><\/tr>\s*<tr><td>Facility Type: (.+)<\/td><\/tr>\s*<tr><td>Service Type\(s\): (.+)<\/td>\s*<\/tr>\s*<tr><td>Capacity: (\d+)<\/td><\/tr>/
 inspection_pattern = />Routine Inspection<\/a>/
-
-central_park_coordinates = [49.2276595, -123.0179715]
 
 daycares = daycares.map do |url, name, phone|
   url = "https://www.healthspace.ca#{url}"
@@ -68,13 +79,13 @@ daycares = daycares.map do |url, name, phone|
     capacity: capacity,
     num_inspections: num_inspections,
     coordinates: encoded_location&.coordinates,
-    distance_to_central_park: Geocoder::Calculations.distance_between(central_park_coordinates, encoded_location&.coordinates).round(2),
+    distance_to_target: Geocoder::Calculations.distance_between(city[:target_coordinates], encoded_location&.coordinates).round(2),
   }
 end
 
 puts "\nFINISHED"
 
-daycares = daycares.compact.sort_by { |daycare| daycare[:distance_to_central_park] }
+daycares = daycares.compact.sort_by { |daycare| daycare[:distance_to_target] }
 
 CSV.open('./childcares.csv', 'w') do |csv|
   csv << [
@@ -84,7 +95,7 @@ CSV.open('./childcares.csv', 'w') do |csv|
     'service_type',
     'capacity',
     'num_inspections',
-    'distance_to_central_park',
+    "distance_to_#{city[:target_name]}",
     'coordinates',
   ]
   daycares.each do |daycare|
@@ -95,7 +106,7 @@ CSV.open('./childcares.csv', 'w') do |csv|
       daycare[:service_type],
       daycare[:capacity],
       daycare[:num_inspections],
-      daycare[:distance_to_central_park],
+      daycare[:distance_to_target],
       (daycare[:coordinates] || []).map(&:to_s).join(', ')
     ]
   end
